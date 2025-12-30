@@ -143,7 +143,9 @@ docker run -i --rm \
 │   └── simple_test.py          # Functionality tests
 ├── docs/                        # Documentation
 │   ├── README.md               # Detailed documentation
-│   └── MANUAL_TESTING_GUIDE.md # Testing guide
+│   ├── MANUAL_TESTING_GUIDE.md # Testing guide
+│   ├── task-manager-api.yaml   # OpenAPI 3.0 specification
+│   └── API_GENERATION_GUIDE.md # Code generation guide
 ├── Dockerfile                   # Docker configuration
 ├── .dockerignore               # Docker ignore file
 ├── build-docker.sh             # Docker build script
@@ -180,6 +182,34 @@ python3 tests/simple_test.py
 
 - [Detailed Documentation](docs/README.md)
 - [Manual Testing Guide](docs/MANUAL_TESTING_GUIDE.md)
+
+## API Design
+
+The MCP server communicates with a RESTful Task Manager API. The API follows REST principles with proper HTTP methods and status codes.
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/tasks/{taskId}` | Get current task status |
+| `POST` | `/api/tasks/{taskId}/status` | Update task status (creates history) |
+| `GET` | `/api/tasks/{taskId}/history` | Get complete task history |
+
+### OpenAPI Specification
+
+Complete API documentation is available in OpenAPI 3.0 format:
+- **File**: [`docs/task-manager-api.yaml`](docs/task-manager-api.yaml)
+- **Use this file to generate server stubs, client SDKs, and documentation**
+
+### Key Design Principles
+
+1. **RESTful URLs**: Resource-based URLs with proper HTTP methods
+2. **Versioning**: Simple `/api/` prefix without version numbers for internal APIs
+3. **Status Updates Create History**: Each status update creates a new history record
+4. **Proper HTTP Status Codes**: 200, 201, 400, 404, 500 etc.
+5. **Consistent Response Format**: All responses follow the same structure
+6. **Pagination Support**: History endpoint supports limit/offset pagination
 
 ## Environment Variables
 

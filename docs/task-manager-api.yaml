@@ -1,0 +1,421 @@
+openapi: 3.0.3
+info:
+  title: Task Manager API
+  description: RESTful API for managing agent task execution status and history
+  version: 1.0.0
+  contact:
+    name: Task Manager API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+  - url: https://task-manager.example.com/api
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Check if the Task Manager service is healthy and operational
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tasks/{taskId}:
+    get:
+      summary: Get current task status
+      description: Retrieve the current status and details of a specific task
+      operationId: getTaskStatus
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Unique identifier of the task
+          schema:
+            type: string
+            example: "task-001"
+      responses:
+        '200':
+          description: Task status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskStatusResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tasks/{taskId}/status:
+    post:
+      summary: Update task status
+      description: Create a new status update record for a task (creates history entry)
+      operationId: updateTaskStatus
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Unique identifier of the task
+          schema:
+            type: string
+            example: "task-001"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+      responses:
+        '204':
+          description: Task status updated successfully
+          headers:
+            Location:
+              description: URL to the created task history entry
+              schema:
+                type: string
+                example: "/api/tasks/task-001/history/123"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /tasks/{taskId}/history:
+    get:
+      summary: Get task history
+      description: Retrieve complete history of status changes and logs for a task
+      operationId: getTaskHistory
+      tags:
+        - Tasks
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          description: Unique identifier of the task
+          schema:
+            type: string
+            example: "task-001"
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of history records to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          description: Number of records to skip (for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Task history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskHistoryResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TaskStatus:
+      type: string
+      enum:
+        - running
+        - success
+        - failed
+      description: Current status of the task
+      example: "running"
+
+    TaskUpdateRequest:
+      type: object
+      required:
+        - session_id
+        - task_id
+        - jira_ticket
+        - status
+        - current_action
+        - message
+      properties:
+        session_id:
+          type: string
+          description: Session unique identifier (one-to-one with task_id)
+          example: "session-123"
+        task_id:
+          type: string
+          description: Task unique identifier
+          example: "task-001"
+        jira_ticket:
+          type: string
+          description: Jira ticket number associated with this task
+          example: "PROJ-789"
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        current_action:
+          type: string
+          description: Description of the current action being performed
+          example: "Processing user request"
+        progress_percentage:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Progress percentage (0-100)
+          example: 25.5
+          default: 0.0
+        message:
+          type: string
+          description: Detailed status message or log entry
+          example: "Started analyzing codebase structure"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional task-specific details and metadata
+          example:
+            file_count: 15
+            complexity: "medium"
+            estimated_time: "5 minutes"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of when this update occurred
+          example: "2024-01-15T10:30:00Z"
+
+    TaskInfo:
+      type: object
+      properties:
+        task_id:
+          type: string
+          description: Task unique identifier
+          example: "task-001"
+        session_id:
+          type: string
+          description: Session unique identifier
+          example: "session-123"
+        jira_ticket:
+          type: string
+          description: Jira ticket number
+          example: "PROJ-789"
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        current_action:
+          type: string
+          description: Current action being performed
+          example: "Processing user request"
+        progress_percentage:
+          type: number
+          format: float
+          description: Current progress percentage
+          example: 75.0
+        message:
+          type: string
+          description: Latest status message
+          example: "Analysis completed successfully"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional task details
+        created_at:
+          type: string
+          format: date-time
+          description: Task creation timestamp
+          example: "2024-01-15T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2024-01-15T10:30:00Z"
+
+    TaskHistoryEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: History entry unique identifier
+          example: 123
+        task_id:
+          type: string
+          description: Task unique identifier
+          example: "task-001"
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        current_action:
+          type: string
+          description: Action performed at this point
+          example: "Analyzing code structure"
+        progress_percentage:
+          type: number
+          format: float
+          description: Progress at this point
+          example: 50.0
+        message:
+          type: string
+          description: Status message or log entry
+          example: "Found 15 source files to analyze"
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional details at this point
+        timestamp:
+          type: string
+          format: date-time
+          description: When this entry was created
+          example: "2024-01-15T10:15:00Z"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        version:
+          type: string
+          example: "1.0.0"
+        uptime:
+          type: string
+          description: Service uptime
+          example: "2h 15m 30s"
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+              enum: [connected, disconnected]
+              example: "connected"
+            response_time_ms:
+              type: number
+              example: 15.5
+
+    TaskStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/TaskInfo'
+
+    TaskHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            task_id:
+              type: string
+              example: "task-001"
+            total_count:
+              type: integer
+              description: Total number of history entries
+              example: 25
+            entries:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskHistoryEntry'
+            pagination:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                  example: 100
+                offset:
+                  type: integer
+                  example: 0
+                has_more:
+                  type: boolean
+                  example: false
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: "Task not found"
+        error_code:
+          type: string
+          description: Machine-readable error code
+          example: "TASK_NOT_FOUND"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Health
+    description: Service health and status endpoints
+  - name: Tasks
+    description: Task management and status tracking endpoints

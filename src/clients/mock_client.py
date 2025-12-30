@@ -27,7 +27,7 @@ class MockTaskManagerClient(TaskManagerClient):
     def __init__(self):
         self.tasks = {}
         self.sessions = {}
-    
+
     def update_task_status(self, task_update: TaskUpdate) -> Dict[str, Any]:
         """Mock update task status"""
         task_data = task_update.to_dict()
@@ -36,8 +36,7 @@ class MockTaskManagerClient(TaskManagerClient):
         
         return {
             "success": True,
-            "message": "Task status updated successfully (mock)",
-            "data": task_data
+            "message": "Task status updated successfully (mock)"
         }
     
     def get_task_status(self, task_id: str) -> Dict[str, Any]:

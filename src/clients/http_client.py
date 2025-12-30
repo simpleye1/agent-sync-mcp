@@ -60,6 +60,11 @@ class HttpTaskManagerClient(TaskManagerClient):
                     "success": True,
                     "data": response.json() if response.content else None
                 }
+            elif response.status_code == 204:
+                return {
+                    "success": True,
+                    "data": None
+                }
             elif response.status_code == 404:
                 return {
                     "success": False,
@@ -88,20 +93,19 @@ class HttpTaskManagerClient(TaskManagerClient):
             }
     
     def update_task_status(self, task_update: TaskUpdate) -> Dict[str, Any]:
-        """Update task status"""
-        result = self._make_request('POST', '/api/tasks/status', task_update.to_dict())
+        """Update task status - updates task table and creates history record"""
+        result = self._make_request('POST', f'/api/tasks/{task_update.task_id}/status', task_update.to_dict())
         
         if result["success"]:
             return {
                 "success": True,
-                "message": "Task status updated successfully",
-                "data": result.get("data")
+                "message": "Task status updated successfully"
             }
         else:
             return result
     
     def get_task_status(self, task_id: str) -> Dict[str, Any]:
-        """Get task status"""
+        """Get current task status"""
         result = self._make_request('GET', f'/api/tasks/{task_id}')
         
         if not result["success"] and "not found" in result.get("error", "").lower():
@@ -113,8 +117,8 @@ class HttpTaskManagerClient(TaskManagerClient):
         return result
     
     def get_task_history(self, task_id: str) -> Dict[str, Any]:
-        """Get task complete history"""
-        return self._make_request('GET', f'/api/tasks/{task_id}/complete-history')
+        """Get complete task history"""
+        return self._make_request('GET', f'/api/tasks/{task_id}/history')
     
     def health_check(self) -> Dict[str, Any]:
         """Health check"""
