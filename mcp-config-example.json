@@ -2,17 +2,19 @@
   "mcpServers": {
     "agent-status": {
       "command": "python3",
-      "args": ["/path/to/your/start_mcp_server.py"],
+      "args": ["/path/to/your/agent_status_mcp.py"],
       "env": {
-        "AGENT_STATUS_STORAGE_PATH": "~/.task-manager/agent-status"
+        "TASK_MANAGER_HOST": "localhost",
+        "TASK_MANAGER_PORT": "8080",
+        "TASK_MANAGER_TIMEOUT": "30"
       },
       "disabled": false,
       "autoApprove": [
         "update_task_status",
         "get_task_status",
-        "get_agent_status",
+        "get_session_status",
         "list_running_tasks",
-        "get_storage_info"
+        "health_check"
       ]
     }
   }

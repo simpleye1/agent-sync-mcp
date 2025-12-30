@@ -6,9 +6,10 @@
 
 - 📊 实时跟踪 agent 执行状态
 - 📝 记录任务进度和状态
-- 💾 本地文件存储（支持后续扩展到数据库）
-- 🔍 查询 agent 和任务状态
-- 📈 进度百分比跟踪
+- 🎫 支持 Jira 卡号关联
+- 🌐 通过 API 调用 Task Manager 服务
+- 🔍 健康检查和错误处理
+- ⚙️ 环境变量配置
 
 ## 数据模型
 
@@ -18,64 +19,77 @@
 - `failed`: 执行失败
 
 ### 数据关系
-- **Agent**: 执行任务的智能体（如 claude-coder-001）
-- **Task**: Agent 执行的具体任务（如编写某个功能）
-- 一个 Agent 可以执行多个 Task，但同时只能有一个活跃的 Task
+- **Session**: 会话标识符，与 task_id 一对一关系
+- **Task**: 具体任务，包含 Jira 卡号
+- **Action**: 任务中的具体执行步骤
 
 ### 数据结构
 ```python
 @dataclass
-class TaskInfo:
+class TaskUpdate:
+    session_id: str            # 会话唯一标识 (与 task_id 一对一)
     task_id: str               # 任务唯一标识
-    agent_id: str              # Agent 唯一标识
+    jira_ticket: str           # Jira 卡号
     status: TaskStatus         # 任务状态
-    current_action: str        # 当前动作描述 (Agent 自定义)
+    current_action: str        # 当前动作描述
     progress_percentage: float # 进度百分比 (0-100)
     message: str               # 状态描述
     details: Dict[str, Any]    # 额外详情
-    created_at: str            # 创建时间
-    updated_at: str            # 更新时间
+    timestamp: str             # 时间戳
 ```
 
 ## 快速开始
 
 ### 1. 安装依赖
 ```bash
-pip install fastmcp
+pip install fastmcp requests
 ```
 
-### 2. 启动 MCP 服务器
+### 2. 配置环境变量
 ```bash
-python3 start_mcp_server.py
+export TASK_MANAGER_HOST=localhost
+export TASK_MANAGER_PORT=8080
+export TASK_MANAGER_TIMEOUT=30
 ```
 
-### 3. 在 Kiro 中配置 MCP
+### 3. 启动 MCP 服务器
+```bash
+python3 agent_status_mcp.py
+```
+
+### 4. 在 MCP 客户端中使用
 将以下配置添加到你的 MCP 配置文件中：
 ```json
 {
   "mcpServers": {
     "agent-status": {
       "command": "python3",
-      "args": ["/path/to/your/start_mcp_server.py"],
+      "args": ["/path/to/your/agent_status_mcp.py"],
+      "env": {
+        "TASK_MANAGER_HOST": "localhost",
+        "TASK_MANAGER_PORT": "8080",
+        "TASK_MANAGER_TIMEOUT": "30"
+      },
       "disabled": false,
       "autoApprove": [
         "update_task_status",
         "get_task_status",
-        "get_agent_status",
+        "get_session_status",
         "list_running_tasks",
-        "get_storage_info"
+        "health_check"
       ]
     }
   }
 }
 ```
 
-### 4. 在 Claude Agent 中使用
+### 5. 在 Claude Agent 中使用
 ```python
 # 在你的 Claude Agent 代码中
 await update_task_status(
+    session_id="session-001",
     task_id="task-001",
-    agent_id="claude-coder-001", 
+    jira_ticket="PROJ-123",
     status="running",
     current_action="编写代码",
     message="正在编写新功能代码",
@@ -93,8 +107,9 @@ await update_task_status(
 更新任务状态
 ```python
 update_task_status(
+    session_id="session-001",
     task_id="task-001",
-    agent_id="claude-coder-001",
+    jira_ticket="PROJ-123",
     status="running",
     current_action="编写代码",
     message="正在编写新功能",
@@ -112,10 +127,10 @@ update_task_status(
 get_task_status(task_id="task-001")
 ```
 
-### 3. get_agent_status
-获取 Agent 当前状态
+### 3. get_session_status
+获取会话状态
 ```python
-get_agent_status(agent_id="claude-coder-001")
+get_session_status(session_id="session-001")
 ```
 
 ### 4. list_running_tasks
@@ -124,7 +139,29 @@ get_agent_status(agent_id="claude-coder-001")
 list_running_tasks()
 ```
 
-### 5. get_storage_info
+### 5. health_check
+检查 Task Manager 服务健康状态
+```python
+health_check()
+```
+
+## Task Manager API
+
+MCP 服务器通过以下 API 端点与 Task Manager 服务通信：
+
+- `POST /api/tasks/status` - 更新任务状态
+- `GET /api/tasks/{task_id}` - 获取任务状态
+- `GET /api/sessions/{session_id}` - 获取会话状态
+- `GET /api/tasks?status=running` - 列出运行中的任务
+- `GET /api/health` - 健康检查
+
+## 环境变量配置
+
+| 变量名 | 默认值 | 说明 |
+|--------|--------|------|
+| `TASK_MANAGER_HOST` | `localhost` | Task Manager 服务主机 |
+| `TASK_MANAGER_PORT` | `8080` | Task Manager 服务端口 |
+| `TASK_MANAGER_TIMEOUT` | `30` | API 调用超时时间（秒） |
 获取存储信息和统计
 ```python
 get_storage_info()
@@ -140,17 +177,24 @@ export AGENT_STATUS_STORAGE_PATH="/custom/path/to/storage"
 python3 start_mcp_server.py
 ```
 
+新的层次化存储结构（每个 agent 下有自己的 tasks）：
 ```
 ~/.task-manager/agent-status/
-├── tasks/           # 任务状态文件
-│   ├── task-001.json
-│   └── task-002.json
-└── agents/          # Agent 当前任务文件
-    ├── claude-coder-001.json
-    └── claude-coder-002.json
+└── agents/
+    ├── claude-coder-001/
+    │   ├── current_task.json    # 当前任务信息
+    │   └── tasks/               # 该 agent 的所有任务
+    │       ├── task-001.json
+    │       ├── task-002.json
+    │       └── task-003.json
+    └── claude-coder-002/
+        ├── current_task.json
+        └── tasks/
+            ├── task-004.json
+            └── task-005.json
 ```
 
-### 任务文件格式
+### 任务文件格式 (agents/{agent_id}/tasks/{task_id}.json)
 ```json
 {
   "task_id": "task-001",
@@ -168,7 +212,7 @@ python3 start_mcp_server.py
 }
 ```
 
-### Agent 文件格式
+### Agent 当前任务文件格式 (agents/{agent_id}/current_task.json)
 ```json
 {
   "agent_id": "claude-coder-001",
@@ -183,18 +227,17 @@ python3 start_mcp_server.py
 
 | 文件 | 说明 |
 |------|------|
-| `agent_status_mcp.py` | **核心文件** - MCP 服务器实现，包含所有数据结构、存储逻辑和工具 |
-| `start_mcp_server.py` | **启动脚本** - 友好的服务器启动界面 |
-| `simple_test.py` | **简单测试** - 直接调用功能的测试脚本 |
+| `agent_status_mcp.py` | **核心文件** - MCP 服务器实现，包含 Task Manager API 客户端 |
+| `simple_test.py` | **测试脚本** - 测试 Task Manager 客户端功能 |
 | `requirements.txt` | **依赖文件** - Python 包依赖列表 |
-| `mcp-config-example.json` | **配置示例** - Kiro MCP 配置模板 |
+| `mcp-config-example.json` | **配置示例** - MCP 配置模板 |
 | `README.md` | **项目文档** - 完整的使用说明 |
 | `MANUAL_TESTING_GUIDE.md` | **手动测试指南** - 终端 JSON-RPC 交互详细说明 |
 
 ## 测试
 
 ### 自动化测试
-运行简单测试：
+运行客户端测试：
 ```bash
 python3 simple_test.py
 ```
@@ -204,12 +247,11 @@ python3 simple_test.py
 
 ## 扩展计划
 
-- [ ] 数据库存储支持 (PostgreSQL, SQLite)
+- [ ] Task Manager 服务实现
 - [ ] Web 界面监控面板
 - [ ] 状态变更通知 (Webhook, Email)
 - [ ] 性能指标统计
-- [ ] 多 agent 协作状态跟踪
-- [ ] 状态查询 API
+- [ ] 多会话协作状态跟踪
 - [ ] 实时状态推送 (WebSocket)
 
 ## 许可证
