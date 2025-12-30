@@ -1,64 +1,38 @@
 # Agent Status MCP Server
 
-一个用于跟踪 Claude agent 执行状态的 MCP (Model Context Protocol) 服务器。
+An MCP (Model Context Protocol) server for tracking Claude agent execution status.
 
-## 功能特性
+## Features
 
-- 📊 实时跟踪 agent 执行状态
-- 📝 记录任务进度和状态
-- 🎫 支持 Jira 卡号关联
-- 🌐 通过 API 调用 Task Manager 服务
-- 🔍 健康检查和错误处理
-- ⚙️ 环境变量配置
+- 📊 Real-time agent execution status tracking
+- 📝 Task progress and status recording
+- 🎫 Jira ticket number integration
+- 🌐 Data storage via Task Manager service API calls
+- 🔍 Health check and error handling
+- ⚙️ Environment variable configuration
+- 🏗️ Feign-like client interface architecture
 
-## 数据模型
+## Quick Start
 
-### 任务状态 (TaskStatus)
-- `running`: 正在执行
-- `success`: 执行成功
-- `failed`: 执行失败
-
-### 数据关系
-- **Session**: 会话标识符，与 task_id 一对一关系
-- **Task**: 具体任务，包含 Jira 卡号
-- **Action**: 任务中的具体执行步骤
-
-### 数据结构
-```python
-@dataclass
-class TaskUpdate:
-    session_id: str            # 会话唯一标识 (与 task_id 一对一)
-    task_id: str               # 任务唯一标识
-    jira_ticket: str           # Jira 卡号
-    status: TaskStatus         # 任务状态
-    current_action: str        # 当前动作描述
-    progress_percentage: float # 进度百分比 (0-100)
-    message: str               # 状态描述
-    details: Dict[str, Any]    # 额外详情
-    timestamp: str             # 时间戳
-```
-
-## 快速开始
-
-### 1. 安装依赖
+### 1. Install Dependencies
 ```bash
 pip install fastmcp requests
 ```
 
-### 2. 配置环境变量
+### 2. Configure Environment Variables
 ```bash
 export TASK_MANAGER_HOST=localhost
 export TASK_MANAGER_PORT=8080
 export TASK_MANAGER_TIMEOUT=30
 ```
 
-### 3. 启动 MCP 服务器
+### 3. Start MCP Server
 ```bash
 python3 agent_status_mcp.py
 ```
 
-### 4. 在 Claude Code CLI 中配置
-在 Claude Code CLI 的配置文件中添加：
+### 4. Configure in Claude Code CLI
+Add to Claude Code CLI configuration file:
 ```json
 {
   "mcpServers": {
@@ -75,117 +49,71 @@ python3 agent_status_mcp.py
 }
 ```
 
-### 5. 在 Claude Agent 中使用
-```python
-# 在你的 Claude Agent 代码中
-await update_task_status(
-    session_id="session-001",
-    task_id="task-001",
-    jira_ticket="PROJ-123",
-    status="running",
-    current_action="编写代码",
-    message="正在编写新功能代码",
-    progress_percentage=60,
-    details={
-        "files_modified": ["src/main.py"],
-        "lines_added": 45
-    }
-)
+## Project Structure
+
+```
+├── agent_status_mcp.py          # Main entry point
+├── src/                         # Source code
+│   ├── models/                  # Data models
+│   │   ├── __init__.py
+│   │   └── models.py           # TaskStatus, TaskUpdate
+│   ├── clients/                 # Client implementations
+│   │   ├── __init__.py
+│   │   ├── client_interface.py  # Abstract interface
+│   │   ├── http_client.py      # HTTP implementation
+│   │   ├── mock_client.py      # Mock implementation
+│   │   └── client_factory.py   # Factory method
+│   └── server/                  # MCP server
+│       ├── __init__.py
+│       └── mcp_tools.py        # FastMCP tools
+├── tests/                       # Test files
+│   └── simple_test.py          # Functionality tests
+├── docs/                        # Documentation
+│   ├── README.md               # Detailed documentation
+│   └── MANUAL_TESTING_GUIDE.md # Testing guide
+├── requirements.txt             # Dependencies
+└── mcp-config-example.json     # Configuration example
 ```
 
-## MCP 工具
-
-### 1. update_task_status
-更新任务状态
+### 4. get_task_history
+Get complete task history
 ```python
-update_task_status(
-    session_id="session-001",
-    task_id="task-001",
-    jira_ticket="PROJ-123",
-    status="running",
-    current_action="编写代码",
-    message="正在编写新功能",
-    progress_percentage=60.0,
-    details={
-        "files_modified": ["src/main.py"],
-        "lines_added": 45
-    }
-)
-```
-
-### 2. get_task_status
-获取任务状态
-```python
-get_task_status(task_id="task-001")
-```
-
-### 3. get_session_status
-获取会话状态
-```python
-get_session_status(session_id="session-001")
-```
-
-### 4. list_running_tasks
-列出所有运行中的任务
-```python
-list_running_tasks()
+get_task_history(task_id="task-001")
 ```
 
 ### 5. health_check
-检查 Task Manager 服务健康状态
+Check Task Manager service health status
 ```python
 health_check()
 ```
 
-## Task Manager API
+## Testing
 
-MCP 服务器通过以下 API 端点与 Task Manager 服务通信：
-
-- `POST /api/tasks/status` - 更新任务状态
-- `GET /api/tasks/{task_id}` - 获取任务状态
-- `GET /api/sessions/{session_id}` - 获取会话状态
-- `GET /api/tasks?status=running` - 列出运行中的任务
-- `GET /api/health` - 健康检查
-
-## 环境变量配置
-
-| 变量名 | 默认值 | 说明 |
-|--------|--------|------|
-| `TASK_MANAGER_HOST` | `localhost` | Task Manager 服务主机 |
-| `TASK_MANAGER_PORT` | `8080` | Task Manager 服务端口 |
-| `TASK_MANAGER_TIMEOUT` | `30` | API 调用超时时间（秒） |
-
-## 项目文件说明
-
-| 文件 | 说明 |
-|------|------|
-| `agent_status_mcp.py` | **核心文件** - MCP 服务器实现，包含 Task Manager API 客户端 |
-| `simple_test.py` | **测试脚本** - 测试 Task Manager 客户端功能 |
-| `requirements.txt` | **依赖文件** - Python 包依赖列表 |
-| `mcp-config-example.json` | **配置示例** - Claude Code CLI MCP 配置模板 |
-| `README.md` | **项目文档** - 完整的使用说明 |
-| `MANUAL_TESTING_GUIDE.md` | **手动测试指南** - 终端 JSON-RPC 交互详细说明 |
-
-## 测试
-
-### 自动化测试
-运行客户端测试：
+### Automated Testing
 ```bash
-python3 simple_test.py
+python3 tests/simple_test.py
 ```
 
-### 手动终端测试
-详细的手动测试指南请参考：[MANUAL_TESTING_GUIDE.md](MANUAL_TESTING_GUIDE.md)
+### Mock Client Testing
+```bash
+export USE_MOCK_CLIENT=true
+python3 tests/simple_test.py
+```
 
-## 扩展计划
+## Documentation
 
-- [ ] Task Manager 服务实现
-- [ ] Web 界面监控面板
-- [ ] 状态变更通知 (Webhook, Email)
-- [ ] 性能指标统计
-- [ ] 多会话协作状态跟踪
-- [ ] 实时状态推送 (WebSocket)
+- [Detailed Documentation](docs/README.md)
+- [Manual Testing Guide](docs/MANUAL_TESTING_GUIDE.md)
 
-## 许可证
+## Environment Variables
+
+| Variable Name | Default Value | Description |
+|---------------|---------------|-------------|
+| `TASK_MANAGER_HOST` | `localhost` | Task Manager service host |
+| `TASK_MANAGER_PORT` | `8080` | Task Manager service port |
+| `TASK_MANAGER_TIMEOUT` | `30` | API call timeout (seconds) |
+| `USE_MOCK_CLIENT` | `false` | Use mock client for testing |
+
+## License
 
 MIT License
