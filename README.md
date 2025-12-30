@@ -14,31 +14,33 @@ An MCP (Model Context Protocol) server for tracking Claude agent execution statu
 
 ## Quick Start
 
-### 1. Install Dependencies
+### Option 1: Direct Python Execution
+
+#### 1. Install Dependencies
 ```bash
 pip install fastmcp requests
 ```
 
-### 2. Configure Environment Variables
+#### 2. Configure Environment Variables
 ```bash
 export TASK_MANAGER_HOST=localhost
 export TASK_MANAGER_PORT=8080
 export TASK_MANAGER_TIMEOUT=30
 ```
 
-### 3. Start MCP Server
+#### 3. Start MCP Server
 ```bash
-python3 agent_status_mcp.py
+python3 agent_sync_mcp.py
 ```
 
-### 4. Configure in Claude Code CLI
+#### 4. Configure in Claude Code CLI
 Add to Claude Code CLI configuration file:
 ```json
 {
   "mcpServers": {
     "agent-status": {
       "command": "python3",
-      "args": ["/path/to/your/agent_status_mcp.py"],
+      "args": ["/path/to/your/agent_sync_mcp.py"],
       "env": {
         "TASK_MANAGER_HOST": "localhost",
         "TASK_MANAGER_PORT": "8080",
@@ -49,10 +51,58 @@ Add to Claude Code CLI configuration file:
 }
 ```
 
+### Option 2: Docker Container
+
+#### 1. Build Docker Image
+```bash
+chmod +x build-docker.sh
+./build-docker.sh
+```
+
+#### 2. Add to Claude Desktop
+```bash
+claude mcp add agent-sync -s user\
+  --env "TASK_MANAGER_HOST=localhost" \
+  --env "TASK_MANAGER_PORT=8080" \
+  --env "TASK_MANAGER_TIMEOUT=30" \
+  --env "USE_MOCK_CLIENT=false" \
+  -- docker run -i --rm \
+    -e TASK_MANAGER_HOST \
+    -e TASK_MANAGER_PORT \
+    -e TASK_MANAGER_TIMEOUT \
+    -e USE_MOCK_CLIENT \
+    agent-sync-mcp:latest
+```
+
+#### 3. Add to Claude Desktop (Mock Mode for Testing)
+```bash
+claude mcp add agent-sync-mock -s user\
+  --env "USE_MOCK_CLIENT=true" \
+  -- docker run -i --rm \
+    -e USE_MOCK_CLIENT \
+    agent-sync-mcp:latest
+```
+
+#### 4. Manual Docker Run (for testing)
+```bash
+# Production mode
+docker run -i --rm \
+  -e TASK_MANAGER_HOST=localhost \
+  -e TASK_MANAGER_PORT=8080 \
+  -e TASK_MANAGER_TIMEOUT=30 \
+  -e USE_MOCK_CLIENT=false \
+  agent-sync-mcp:latest
+
+# Mock mode for testing
+docker run -i --rm \
+  -e USE_MOCK_CLIENT=true \
+  agent-sync-mcp:latest
+```
+
 ## Project Structure
 
 ```
-├── agent_status_mcp.py          # Main entry point
+├── agent_sync_mcp.py            # Main entry point
 ├── src/                         # Source code
 │   ├── models/                  # Data models
 │   │   ├── __init__.py
@@ -71,6 +121,9 @@ Add to Claude Code CLI configuration file:
 ├── docs/                        # Documentation
 │   ├── README.md               # Detailed documentation
 │   └── MANUAL_TESTING_GUIDE.md # Testing guide
+├── Dockerfile                   # Docker configuration
+├── .dockerignore               # Docker ignore file
+├── build-docker.sh             # Docker build script
 ├── requirements.txt             # Dependencies
 └── mcp-config-example.json     # Configuration example
 ```
