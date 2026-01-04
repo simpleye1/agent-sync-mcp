@@ -18,17 +18,17 @@ class TaskManagerClient(ABC):
     """Abstract Task Manager client interface (similar to Java Feign)"""
     
     @abstractmethod
-    def update_task_status(self, task_update: TaskUpdate) -> Dict[str, Any]:
+    def update_task_status(self, task_update: TaskUpdate, id_type: str = "session_id") -> Dict[str, Any]:
         """Update task status"""
         pass
     
     @abstractmethod
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    def get_task_status(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Get task status"""
         pass
     
     @abstractmethod
-    def get_task_history(self, task_id: str) -> Dict[str, Any]:
+    def get_task_history(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Get task complete history"""
         pass
     

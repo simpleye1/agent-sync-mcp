@@ -42,7 +42,6 @@ def test_http_client():
     print("\n📝 Creating test task update...")
     task_update = TaskUpdate(
         session_id="test-session-001",
-        task_id="test-task-001",
         jira_ticket="PROJ-123",
         status=TaskStatus.RUNNING,
         current_action="Testing API calls",
@@ -54,7 +53,6 @@ def test_http_client():
     
     print("✅ Task update object created successfully")
     print(f"   Session ID: {task_update.session_id}")
-    print(f"   Task ID: {task_update.task_id}")
     print(f"   Jira Ticket: {task_update.jira_ticket}")
     print(f"   Status: {task_update.status.value}")
     print(f"   Progress: {task_update.progress_percentage}%")
@@ -71,7 +69,7 @@ def test_http_client():
     
     # Test get task status
     print("\n📊 Testing get task status...")
-    task_result = client.get_task_status("test-task-001")
+    task_result = client.get_task_status("test-session-001")
     if task_result["success"]:
         print("✅ Get task status successful")
         print(f"   Data: {task_result['data']}")
@@ -101,7 +99,6 @@ def test_mock_client():
     # Create test task update
     task_update = TaskUpdate(
         session_id="mock-session-001",
-        task_id="mock-task-001",
         jira_ticket="MOCK-123",
         status=TaskStatus.RUNNING,
         current_action="Testing mock client",
@@ -123,18 +120,18 @@ def test_mock_client():
     
     # Test get task status
     print("\n📊 Testing get task status...")
-    task_result = client.get_task_status("mock-task-001")
+    task_result = client.get_task_status("mock-session-001")
     if task_result["success"]:
         print("✅ Get task status successful")
-        print(f"   Task ID: {task_result['data']['task_id']}")
+        print(f"   Session ID: {task_result['data']['session_id']}")
         print(f"   Status: {task_result['data']['status']}")
     else:
         print("❌ Get task status failed")
         print(f"   Error: {task_result['error']}")
     
-    # Test get session status
+    # Test get task history
     print("\n👤 Testing get task history...")
-    history_result = client.get_task_history("mock-task-001")
+    history_result = client.get_task_history("mock-session-001")
     if history_result["success"]:
         print("✅ Get task history successful")
         print(f"   Status history count: {len(history_result['data']['status_history'])}")

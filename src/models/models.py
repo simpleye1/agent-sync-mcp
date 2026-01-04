@@ -19,7 +19,6 @@ class TaskStatus(Enum):
 class TaskUpdate:
     """Task update data structure"""
     session_id: str
-    task_id: str
     jira_ticket: str
     status: TaskStatus
     current_action: str  # Current action description
@@ -32,7 +31,6 @@ class TaskUpdate:
         """Convert to dictionary format"""
         return {
             "session_id": self.session_id,
-            "task_id": self.task_id,
             "jira_ticket": self.jira_ticket,
             "status": self.status.value,
             "current_action": self.current_action,

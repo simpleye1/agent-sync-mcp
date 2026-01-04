@@ -42,6 +42,13 @@ class HttpTaskManagerClient(TaskManagerClient):
             
             if method.upper() == 'GET':
                 response = requests.get(url, timeout=self.timeout)
+            elif method.upper() == 'PUT':
+                response = requests.put(
+                    url,
+                    json=data,
+                    timeout=self.timeout,
+                    headers={'Content-Type': 'application/json'}
+                )
             elif method.upper() == 'POST':
                 response = requests.post(
                     url,
@@ -92,9 +99,14 @@ class HttpTaskManagerClient(TaskManagerClient):
                 "error": f"API call exception: {str(e)}"
             }
     
-    def update_task_status(self, task_update: TaskUpdate) -> Dict[str, Any]:
+    def update_task_status(self, task_update: TaskUpdate, id_type: str = "session_id") -> Dict[str, Any]:
         """Update task status - updates task table and creates history record"""
-        result = self._make_request('POST', f'/api/tasks/{task_update.task_id}/status', task_update.to_dict())
+        identifier = task_update.session_id if id_type == "session_id" else task_update.session_id
+        endpoint = f'/api/tasks/{identifier}/status'
+        if id_type != "session_id":
+            endpoint += f'?id_type={id_type}'
+        
+        result = self._make_request('PUT', endpoint, task_update.to_dict())
         
         if result["success"]:
             return {
@@ -104,21 +116,29 @@ class HttpTaskManagerClient(TaskManagerClient):
         else:
             return result
     
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    def get_task_status(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Get current task status"""
-        result = self._make_request('GET', f'/api/tasks/{task_id}')
+        endpoint = f'/api/tasks/{identifier}'
+        if id_type != "session_id":
+            endpoint += f'?id_type={id_type}'
+            
+        result = self._make_request('GET', endpoint)
         
         if not result["success"] and "not found" in result.get("error", "").lower():
             return {
                 "success": False,
-                "error": f"Task {task_id} not found"
+                "error": f"Task with {id_type} '{identifier}' not found"
             }
         
         return result
     
-    def get_task_history(self, task_id: str) -> Dict[str, Any]:
+    def get_task_history(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Get complete task history"""
-        return self._make_request('GET', f'/api/tasks/{task_id}/history')
+        endpoint = f'/api/tasks/{identifier}/history'
+        if id_type != "session_id":
+            endpoint += f'?id_type={id_type}'
+            
+        return self._make_request('GET', endpoint)
     
     def health_check(self) -> Dict[str, Any]:
         """Health check"""

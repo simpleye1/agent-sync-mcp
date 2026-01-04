@@ -25,39 +25,40 @@ class MockTaskManagerClient(TaskManagerClient):
     """Mock implementation for testing"""
     
     def __init__(self):
-        self.tasks = {}
         self.sessions = {}
 
-    def update_task_status(self, task_update: TaskUpdate) -> Dict[str, Any]:
+    def update_task_status(self, task_update: TaskUpdate, id_type: str = "session_id") -> Dict[str, Any]:
         """Mock update task status"""
         task_data = task_update.to_dict()
-        self.tasks[task_update.task_id] = task_data
+        # For mock, we'll use session_id as the key regardless of id_type
         self.sessions[task_update.session_id] = task_data
         
         return {
             "success": True,
-            "message": "Task status updated successfully (mock)"
+            "message": f"Task status updated successfully (mock, id_type: {id_type})"
         }
     
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    def get_task_status(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Mock get task status"""
-        if task_id in self.tasks:
+        # For mock, we'll treat identifier as session_id regardless of id_type
+        if identifier in self.sessions:
             return {
                 "success": True,
-                "data": self.tasks[task_id]
+                "data": self.sessions[identifier]
             }
         else:
             return {
                 "success": False,
-                "error": f"Task {task_id} not found"
+                "error": f"Task with {id_type} '{identifier}' not found"
             }
     
-    def get_task_history(self, task_id: str) -> Dict[str, Any]:
+    def get_task_history(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
         """Mock get task complete history"""
-        if task_id in self.tasks:
+        # For mock, we'll treat identifier as session_id regardless of id_type
+        if identifier in self.sessions:
             # Mock complete history including current status and logs
             history = {
-                "task_info": self.tasks[task_id],
+                "task_info": self.sessions[identifier],
                 "status_history": [
                     {
                         "id": 1,
@@ -69,11 +70,11 @@ class MockTaskManagerClient(TaskManagerClient):
                     },
                     {
                         "id": 2,
-                        "status": self.tasks[task_id]["status"],
-                        "current_action": self.tasks[task_id]["current_action"],
-                        "progress_percentage": self.tasks[task_id]["progress_percentage"],
-                        "message": self.tasks[task_id]["message"],
-                        "created_at": self.tasks[task_id]["timestamp"]
+                        "status": self.sessions[identifier]["status"],
+                        "current_action": self.sessions[identifier]["current_action"],
+                        "progress_percentage": self.sessions[identifier]["progress_percentage"],
+                        "message": self.sessions[identifier]["message"],
+                        "created_at": self.sessions[identifier]["timestamp"]
                     }
                 ],
                 "logs": [
@@ -99,7 +100,7 @@ class MockTaskManagerClient(TaskManagerClient):
         else:
             return {
                 "success": False,
-                "error": f"Task {task_id} not found"
+                "error": f"Task with {id_type} '{identifier}' not found"
             }
     
     def health_check(self) -> Dict[str, Any]:
@@ -109,7 +110,6 @@ class MockTaskManagerClient(TaskManagerClient):
             "message": "Task Manager service is healthy (mock)",
             "config": {
                 "type": "mock",
-                "tasks_count": len(self.tasks),
                 "sessions_count": len(self.sessions)
             }
         }
