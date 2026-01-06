@@ -7,12 +7,12 @@ import os
 import sys
 from pathlib import Path
 
-# Add src directory to Python path
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-from models import TaskUpdate, TaskStatus
-from clients.client_factory import create_task_manager_client
+from src.models import TaskUpdate, TaskStatus
+from src.clients import create_task_manager_client
 
 
 def test_generated_client():

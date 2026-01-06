@@ -6,13 +6,7 @@ MCP tools implementation - simplified without interface layer
 from typing import Dict, Any, Optional
 import fastmcp
 
-# Import from local modules
-import sys
-from pathlib import Path
-clients_path = Path(__file__).parent.parent / "clients"
-sys.path.insert(0, str(clients_path))
-
-from client_factory import create_task_manager_client
+from src.clients import create_task_manager_client
 
 
 # Create client instance
@@ -48,7 +42,7 @@ def update_task_status(
         Operation result
     """
     from datetime import datetime, timezone
-    from models import TaskUpdate, TaskStatus
+    from src.models import TaskUpdate, TaskStatus
     
     try:
         # Validate status value

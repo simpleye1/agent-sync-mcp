@@ -6,25 +6,18 @@ HTTP implementation using auto-generated client
 import os
 from typing import Dict, Any
 
-# Import from local modules
-import sys
-from pathlib import Path
-models_path = Path(__file__).parent.parent / "models"
-clients_path = Path(__file__).parent.parent / "clients"
-sys.path.insert(0, str(models_path))
-sys.path.insert(0, str(clients_path))
-
-from models import TaskUpdate
+from src.models import TaskUpdate
+from src.clients.base_client import TaskManagerClientBase
 
 # Import generated client
-from generated._client import Client
-from generated._client.api.tasks import (
+from src.clients.generated._client import Client
+from src.clients.generated._client.api.tasks import (
     put_api_tasks_identifier_status,
     get_api_tasks_identifier,
     get_api_tasks_identifier_history
 )
-from generated._client.api.health import get_api_health
-from generated._client.models import (
+from src.clients.generated._client.api.health import get_api_health
+from src.clients.generated._client.models import (
     HttpTaskUpdateRequest,
     HttpTaskUpdateRequestStatus,
     PutApiTasksIdentifierStatusIdType,
@@ -35,10 +28,10 @@ from generated._client.models import (
     HttpTaskStatusResponse,
     HttpTaskHistoryResponse
 )
-from generated._client.types import UNSET
+from src.clients.generated._client.types import UNSET
 
 
-class HttpTaskManagerClient:
+class HttpTaskManagerClient(TaskManagerClientBase):
     """HTTP implementation using auto-generated client"""
     
     def __init__(self):
@@ -68,7 +61,7 @@ class HttpTaskManagerClient:
         # Handle details conversion
         details = UNSET
         if task_update.details:
-            from generated._client.models.http_task_update_request_details import HttpTaskUpdateRequestDetails
+            from src.clients.generated._client.models.http_task_update_request_details import HttpTaskUpdateRequestDetails
             details_obj = HttpTaskUpdateRequestDetails()
             for key, value in task_update.details.items():
                 details_obj[key] = value

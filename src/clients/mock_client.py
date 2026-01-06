@@ -5,15 +5,11 @@ Mock implementation of Task Manager client for testing
 
 from typing import Dict, Any
 
-# Import from local modules
-import sys
-from pathlib import Path
-models_path = Path(__file__).parent.parent / "models"
-sys.path.insert(0, str(models_path))
-from models import TaskUpdate
+from src.models import TaskUpdate
+from src.clients.base_client import TaskManagerClientBase
 
 
-class MockTaskManagerClient:
+class MockTaskManagerClient(TaskManagerClientBase):
     """Mock implementation for testing"""
     
     def __init__(self):

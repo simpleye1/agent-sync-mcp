@@ -8,12 +8,12 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Add src directory to Python path
-src_path = Path(__file__).parent.parent / "src"
-sys.path.insert(0, str(src_path))
+# Add project root to Python path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
 
-from clients import HttpTaskManagerClient, MockTaskManagerClient
-from models import TaskUpdate, TaskStatus
+from src.clients import HttpTaskManagerClient, MockTaskManagerClient
+from src.models import TaskUpdate, TaskStatus
 
 
 def test_http_client():
