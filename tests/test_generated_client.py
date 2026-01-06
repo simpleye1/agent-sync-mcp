@@ -19,7 +19,6 @@ def test_generated_client():
     """Test the HTTP client"""
     print("Testing HTTP Client...")
     
-    # Create client through factory (now defaults to HTTP client)
     client = create_task_manager_client()
     print(f"Created client: {type(client).__name__}")
     
@@ -40,25 +39,25 @@ def test_generated_client():
         timestamp="2024-12-30T15:30:00Z"
     )
     
-    # Test update task status
-    print("\n2. Testing update task status...")
-    update_result = client.update_task_status(task_update)
+    # Test update task (by task_id)
+    print("\n2. Testing update task...")
+    update_result = client.update_task("test_task_789", task_update)
     print(f"Update result: {update_result}")
     
-    # Test get task status
-    print("\n3. Testing get task status...")
-    status_result = client.get_task_status("test_session_123")
+    # Test get task (by session_id)
+    print("\n3. Testing get task by session_id...")
+    status_result = client.get_task(session_id="test_session_123")
+    print(f"Status result: {status_result}")
+    
+    # Test get task (by task_id)
+    print("\n4. Testing get task by task_id...")
+    status_result = client.get_task(task_id="test_task_789")
     print(f"Status result: {status_result}")
     
     # Test get task history
-    print("\n4. Testing get task history...")
-    history_result = client.get_task_history("test_session_123")
+    print("\n5. Testing get task history...")
+    history_result = client.get_task_history("test_task_789")
     print(f"History result: {history_result}")
-    
-    # Test with task_id type
-    print("\n5. Testing with task_id type...")
-    status_result_task_id = client.get_task_status("task_789", id_type="task_id")
-    print(f"Status result (task_id): {status_result_task_id}")
     
     print("\nHTTP client test completed!")
 
@@ -67,7 +66,7 @@ def test_factory_selection():
     """Test that factory correctly selects different clients"""
     print("\nTesting Factory Client Selection...")
     
-    # Test default client (now HTTP client)
+    # Test default client (HTTP client)
     os.environ.pop('USE_MOCK_CLIENT', None)
     client = create_task_manager_client()
     print(f"Default client: {type(client).__name__}")

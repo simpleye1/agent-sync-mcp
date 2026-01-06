@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MCP tools implementation - simplified without interface layer
+MCP tools implementation
 """
 
 from typing import Dict, Any, Optional
@@ -17,7 +17,7 @@ mcp = fastmcp.FastMCP("Agent Status Tracker")
 
 
 @mcp.tool()
-def update_task_status(
+def update_task(
     session_id: str,
     jira_ticket: str,
     status: str,
@@ -27,16 +27,16 @@ def update_task_status(
     details: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
-    Update task status
+    Update task status for the current agent session
     
     Args:
-        session_id: Session unique identifier
-        jira_ticket: Jira ticket number
-        status: Task status (running/success/failed)
-        current_action: Current action description
-        message: Status description message
-        progress_percentage: Progress percentage (0-100)
-        details: Additional task details (optional)
+        session_id: Your agent session ID (use your own session identifier)
+        jira_ticket: Jira ticket number you are working on
+        status: Sub-task status - "running" while in progress, "success" when completed, "failed" on error
+        current_action: Sub-task name in one word (e.g. analyzing, coding, testing, reviewing, deploying)
+        message: Detailed description of what you accomplished or encountered
+        progress_percentage: Your estimated overall progress (0-100)
+        details: Additional context as key-value pairs (optional)
     
     Returns:
         Operation result
@@ -45,10 +45,17 @@ def update_task_status(
     from src.models import TaskUpdate, TaskStatus
     
     try:
-        # Validate status value
-        task_status = TaskStatus(status)
+        # First get task_id by session_id
+        get_result = task_client.get_task(session_id=session_id)
+        if not get_result["success"]:
+            return {"success": False, "error": f"Failed to get task: {get_result.get('error')}"}
         
-        # Create task update object
+        task_id = get_result["data"].get("task_id")
+        if not task_id:
+            return {"success": False, "error": "Task not found for session_id"}
+        
+        # Build task update
+        task_status = TaskStatus(status)
         task_update = TaskUpdate(
             session_id=session_id,
             jira_ticket=jira_ticket,
@@ -60,59 +67,63 @@ def update_task_status(
             timestamp=datetime.now(timezone.utc).isoformat()
         )
         
-        # Call client directly
-        result = task_client.update_task_status(task_update)
+        # Update task by task_id
+        result = task_client.update_task(task_id, task_update)
         
         if result["success"]:
             return {
                 "success": True,
-                "message": f"Session {session_id} status updated successfully",
+                "message": f"Task {task_id} updated successfully",
+                "task_id": task_id,
                 "task_update": task_update.to_dict(),
-                "api_response": result.get("data")
+                "api_response": result
             }
         else:
             return result
             
     except ValueError as e:
-        return {
-            "success": False,
-            "error": f"Invalid status value: {str(e)}"
-        }
+        return {"success": False, "error": f"Invalid status value: {str(e)}"}
     except Exception as e:
-        return {
-            "success": False,
-            "error": f"Failed to update status: {str(e)}"
-        }
+        return {"success": False, "error": f"Failed to update task: {str(e)}"}
 
 
 @mcp.tool()
-def get_task_status(session_id: str, id_type: str = "session_id") -> Dict[str, Any]:
+def get_task(session_id: str) -> Dict[str, Any]:
     """
-    Get task status
+    Get current task information for your agent session
     
     Args:
-        session_id: Session unique identifier
-        id_type: Type of identifier (session_id or task_id)
+        session_id: Your agent session ID (use your own session identifier)
     
     Returns:
-        Task status information
+        Task information including status, progress, and details
     """
-    return task_client.get_task_status(session_id, id_type=id_type)
+    return task_client.get_task(session_id=session_id)
 
 
 @mcp.tool()
-def get_task_history(session_id: str, id_type: str = "session_id") -> Dict[str, Any]:
+def get_task_history(session_id: str, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
     """
-    Get task complete history
+    Get complete history of your agent session's task
     
     Args:
-        session_id: Session unique identifier
-        id_type: Type of identifier (session_id or task_id)
+        session_id: Your agent session ID (use your own session identifier)
+        limit: Maximum number of history entries to return (default 100)
+        offset: Number of entries to skip for pagination (default 0)
     
     Returns:
-        Complete task history including status changes and logs
+        Complete task history including all status changes and logs
     """
-    return task_client.get_task_history(session_id, id_type=id_type)
+    # First get task_id by session_id
+    get_result = task_client.get_task(session_id=session_id)
+    if not get_result["success"]:
+        return {"success": False, "error": f"Failed to get task: {get_result.get('error')}"}
+    
+    task_id = get_result["data"].get("task_id")
+    if not task_id:
+        return {"success": False, "error": "Task not found for session_id"}
+    
+    return task_client.get_task_history(task_id, limit=limit, offset=offset)
 
 
 @mcp.tool()

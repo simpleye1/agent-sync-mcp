@@ -4,7 +4,7 @@ Base client interface for Task Manager clients
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 from src.models import TaskUpdate
 
@@ -13,25 +13,25 @@ class TaskManagerClientBase(ABC):
     """Abstract base class defining the Task Manager client interface"""
     
     @abstractmethod
-    def update_task_status(self, task_update: TaskUpdate, id_type: str = "session_id") -> Dict[str, Any]:
-        """Update task status
+    def update_task(self, task_id: str, task_update: TaskUpdate) -> Dict[str, Any]:
+        """Update task by task_id
         
         Args:
+            task_id: Task identifier
             task_update: Task update data
-            id_type: Identifier type, either "session_id" or "task_id"
             
         Returns:
-            Dict with 'success' bool and either 'message' or 'error'
+            Dict with 'success' bool and either 'message'/'task_id' or 'error'
         """
         pass
     
     @abstractmethod
-    def get_task_status(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
-        """Get current task status
+    def get_task(self, session_id: Optional[str] = None, task_id: Optional[str] = None) -> Dict[str, Any]:
+        """Get task by session_id or task_id
         
         Args:
-            identifier: Task identifier (session_id or task_id)
-            id_type: Identifier type, either "session_id" or "task_id"
+            session_id: Session identifier (optional)
+            task_id: Task identifier (optional)
             
         Returns:
             Dict with 'success' bool and either 'data' or 'error'
@@ -39,12 +39,13 @@ class TaskManagerClientBase(ABC):
         pass
     
     @abstractmethod
-    def get_task_history(self, identifier: str, id_type: str = "session_id") -> Dict[str, Any]:
-        """Get complete task history
+    def get_task_history(self, task_id: str, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+        """Get task history by task_id
         
         Args:
-            identifier: Task identifier (session_id or task_id)
-            id_type: Identifier type, either "session_id" or "task_id"
+            task_id: Task identifier
+            limit: Maximum number of history entries
+            offset: Number of entries to skip
             
         Returns:
             Dict with 'success' bool and either 'data' or 'error'
