@@ -1,37 +1,31 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.get_api_tasks_identifier_id_type import GetApiTasksIdentifierIdType
 from ...models.http_error_response import HttpErrorResponse
 from ...models.http_task_status_response import HttpTaskStatusResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    identifier: str,
     *,
-    id_type: GetApiTasksIdentifierIdType | Unset = GetApiTasksIdentifierIdType.SESSION_ID,
+    task_id: str | Unset = UNSET,
+    session_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_id_type: str | Unset = UNSET
-    if not isinstance(id_type, Unset):
-        json_id_type = id_type.value
+    params["task_id"] = task_id
 
-    params["id_type"] = json_id_type
+    params["session_id"] = session_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api/tasks/{identifier}".format(
-            identifier=quote(str(identifier), safe=""),
-        ),
+        "url": "/api/tasks",
         "params": params,
     }
 
@@ -74,19 +68,18 @@ def _build_response(
 
 
 def sync_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierIdType | Unset = GetApiTasksIdentifierIdType.SESSION_ID,
+    task_id: str | Unset = UNSET,
+    session_id: str | Unset = UNSET,
 ) -> Response[HttpErrorResponse | HttpTaskStatusResponse]:
-    """Get task status
+    """Get task
 
-     Get the current status of a task by identifier
+     Get task information by task_id or session_id
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierIdType | Unset):  Default:
-            GetApiTasksIdentifierIdType.SESSION_ID.
+        task_id (str | Unset):
+        session_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -97,8 +90,8 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
-        id_type=id_type,
+        task_id=task_id,
+        session_id=session_id,
     )
 
     response = client.get_httpx_client().request(
@@ -109,19 +102,18 @@ def sync_detailed(
 
 
 def sync(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierIdType | Unset = GetApiTasksIdentifierIdType.SESSION_ID,
+    task_id: str | Unset = UNSET,
+    session_id: str | Unset = UNSET,
 ) -> HttpErrorResponse | HttpTaskStatusResponse | None:
-    """Get task status
+    """Get task
 
-     Get the current status of a task by identifier
+     Get task information by task_id or session_id
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierIdType | Unset):  Default:
-            GetApiTasksIdentifierIdType.SESSION_ID.
+        task_id (str | Unset):
+        session_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -132,26 +124,25 @@ def sync(
     """
 
     return sync_detailed(
-        identifier=identifier,
         client=client,
-        id_type=id_type,
+        task_id=task_id,
+        session_id=session_id,
     ).parsed
 
 
 async def asyncio_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierIdType | Unset = GetApiTasksIdentifierIdType.SESSION_ID,
+    task_id: str | Unset = UNSET,
+    session_id: str | Unset = UNSET,
 ) -> Response[HttpErrorResponse | HttpTaskStatusResponse]:
-    """Get task status
+    """Get task
 
-     Get the current status of a task by identifier
+     Get task information by task_id or session_id
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierIdType | Unset):  Default:
-            GetApiTasksIdentifierIdType.SESSION_ID.
+        task_id (str | Unset):
+        session_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,8 +153,8 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
-        id_type=id_type,
+        task_id=task_id,
+        session_id=session_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -172,19 +163,18 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierIdType | Unset = GetApiTasksIdentifierIdType.SESSION_ID,
+    task_id: str | Unset = UNSET,
+    session_id: str | Unset = UNSET,
 ) -> HttpErrorResponse | HttpTaskStatusResponse | None:
-    """Get task status
+    """Get task
 
-     Get the current status of a task by identifier
+     Get task information by task_id or session_id
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierIdType | Unset):  Default:
-            GetApiTasksIdentifierIdType.SESSION_ID.
+        task_id (str | Unset):
+        session_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -196,8 +186,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            identifier=identifier,
             client=client,
-            id_type=id_type,
+            task_id=task_id,
+            session_id=session_id,
         )
     ).parsed

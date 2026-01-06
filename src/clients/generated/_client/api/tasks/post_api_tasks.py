@@ -1,6 +1,5 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
@@ -9,33 +8,25 @@ from ...client import AuthenticatedClient, Client
 from ...models.http_error_response import HttpErrorResponse
 from ...models.http_task_update_request import HttpTaskUpdateRequest
 from ...models.http_task_update_response import HttpTaskUpdateResponse
-from ...models.put_api_tasks_identifier_status_id_type import PutApiTasksIdentifierStatusIdType
-from ...types import UNSET, Response, Unset
+from ...types import UNSET, Response
 
 
 def _get_kwargs(
-    identifier: str,
     *,
     body: HttpTaskUpdateRequest,
-    id_type: PutApiTasksIdentifierStatusIdType | Unset = PutApiTasksIdentifierStatusIdType.SESSION_ID,
+    task_id: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     params: dict[str, Any] = {}
 
-    json_id_type: str | Unset = UNSET
-    if not isinstance(id_type, Unset):
-        json_id_type = id_type.value
-
-    params["id_type"] = json_id_type
+    params["task_id"] = task_id
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
-        "method": "put",
-        "url": "/api/tasks/{identifier}/status".format(
-            identifier=quote(str(identifier), safe=""),
-        ),
+        "method": "post",
+        "url": "/api/tasks",
         "params": params,
     }
 
@@ -88,20 +79,17 @@ def _build_response(
 
 
 def sync_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
     body: HttpTaskUpdateRequest,
-    id_type: PutApiTasksIdentifierStatusIdType | Unset = PutApiTasksIdentifierStatusIdType.SESSION_ID,
+    task_id: str,
 ) -> Response[HttpErrorResponse | HttpTaskUpdateResponse]:
-    """Update task status
+    """Update task
 
-     Update task status and create history record
+     Update task information and create history record
 
     Args:
-        identifier (str):
-        id_type (PutApiTasksIdentifierStatusIdType | Unset):  Default:
-            PutApiTasksIdentifierStatusIdType.SESSION_ID.
+        task_id (str):
         body (HttpTaskUpdateRequest):
 
     Raises:
@@ -113,9 +101,8 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
         body=body,
-        id_type=id_type,
+        task_id=task_id,
     )
 
     response = client.get_httpx_client().request(
@@ -126,20 +113,17 @@ def sync_detailed(
 
 
 def sync(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
     body: HttpTaskUpdateRequest,
-    id_type: PutApiTasksIdentifierStatusIdType | Unset = PutApiTasksIdentifierStatusIdType.SESSION_ID,
+    task_id: str,
 ) -> HttpErrorResponse | HttpTaskUpdateResponse | None:
-    """Update task status
+    """Update task
 
-     Update task status and create history record
+     Update task information and create history record
 
     Args:
-        identifier (str):
-        id_type (PutApiTasksIdentifierStatusIdType | Unset):  Default:
-            PutApiTasksIdentifierStatusIdType.SESSION_ID.
+        task_id (str):
         body (HttpTaskUpdateRequest):
 
     Raises:
@@ -151,28 +135,24 @@ def sync(
     """
 
     return sync_detailed(
-        identifier=identifier,
         client=client,
         body=body,
-        id_type=id_type,
+        task_id=task_id,
     ).parsed
 
 
 async def asyncio_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
     body: HttpTaskUpdateRequest,
-    id_type: PutApiTasksIdentifierStatusIdType | Unset = PutApiTasksIdentifierStatusIdType.SESSION_ID,
+    task_id: str,
 ) -> Response[HttpErrorResponse | HttpTaskUpdateResponse]:
-    """Update task status
+    """Update task
 
-     Update task status and create history record
+     Update task information and create history record
 
     Args:
-        identifier (str):
-        id_type (PutApiTasksIdentifierStatusIdType | Unset):  Default:
-            PutApiTasksIdentifierStatusIdType.SESSION_ID.
+        task_id (str):
         body (HttpTaskUpdateRequest):
 
     Raises:
@@ -184,9 +164,8 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
         body=body,
-        id_type=id_type,
+        task_id=task_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -195,20 +174,17 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
     body: HttpTaskUpdateRequest,
-    id_type: PutApiTasksIdentifierStatusIdType | Unset = PutApiTasksIdentifierStatusIdType.SESSION_ID,
+    task_id: str,
 ) -> HttpErrorResponse | HttpTaskUpdateResponse | None:
-    """Update task status
+    """Update task
 
-     Update task status and create history record
+     Update task information and create history record
 
     Args:
-        identifier (str):
-        id_type (PutApiTasksIdentifierStatusIdType | Unset):  Default:
-            PutApiTasksIdentifierStatusIdType.SESSION_ID.
+        task_id (str):
         body (HttpTaskUpdateRequest):
 
     Raises:
@@ -221,9 +197,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            identifier=identifier,
             client=client,
             body=body,
-            id_type=id_type,
+            task_id=task_id,
         )
     ).parsed

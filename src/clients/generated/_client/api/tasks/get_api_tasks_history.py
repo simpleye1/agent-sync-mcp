@@ -1,31 +1,24 @@
 from http import HTTPStatus
 from typing import Any
-from urllib.parse import quote
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.get_api_tasks_identifier_history_id_type import GetApiTasksIdentifierHistoryIdType
 from ...models.http_error_response import HttpErrorResponse
 from ...models.http_task_history_response import HttpTaskHistoryResponse
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
-    identifier: str,
     *,
-    id_type: GetApiTasksIdentifierHistoryIdType | Unset = GetApiTasksIdentifierHistoryIdType.SESSION_ID,
+    task_id: str,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
-    json_id_type: str | Unset = UNSET
-    if not isinstance(id_type, Unset):
-        json_id_type = id_type.value
-
-    params["id_type"] = json_id_type
+    params["task_id"] = task_id
 
     params["limit"] = limit
 
@@ -35,9 +28,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/api/tasks/{identifier}/history".format(
-            identifier=quote(str(identifier), safe=""),
-        ),
+        "url": "/api/tasks/history",
         "params": params,
     }
 
@@ -85,10 +76,9 @@ def _build_response(
 
 
 def sync_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierHistoryIdType | Unset = GetApiTasksIdentifierHistoryIdType.SESSION_ID,
+    task_id: str,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
 ) -> Response[HttpErrorResponse | HttpTaskHistoryResponse]:
@@ -97,9 +87,7 @@ def sync_detailed(
      Get complete task history including status changes and logs
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierHistoryIdType | Unset):  Default:
-            GetApiTasksIdentifierHistoryIdType.SESSION_ID.
+        task_id (str):
         limit (int | Unset):  Default: 100.
         offset (int | Unset):  Default: 0.
 
@@ -112,8 +100,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
-        id_type=id_type,
+        task_id=task_id,
         limit=limit,
         offset=offset,
     )
@@ -126,10 +113,9 @@ def sync_detailed(
 
 
 def sync(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierHistoryIdType | Unset = GetApiTasksIdentifierHistoryIdType.SESSION_ID,
+    task_id: str,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
 ) -> HttpErrorResponse | HttpTaskHistoryResponse | None:
@@ -138,9 +124,7 @@ def sync(
      Get complete task history including status changes and logs
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierHistoryIdType | Unset):  Default:
-            GetApiTasksIdentifierHistoryIdType.SESSION_ID.
+        task_id (str):
         limit (int | Unset):  Default: 100.
         offset (int | Unset):  Default: 0.
 
@@ -153,19 +137,17 @@ def sync(
     """
 
     return sync_detailed(
-        identifier=identifier,
         client=client,
-        id_type=id_type,
+        task_id=task_id,
         limit=limit,
         offset=offset,
     ).parsed
 
 
 async def asyncio_detailed(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierHistoryIdType | Unset = GetApiTasksIdentifierHistoryIdType.SESSION_ID,
+    task_id: str,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
 ) -> Response[HttpErrorResponse | HttpTaskHistoryResponse]:
@@ -174,9 +156,7 @@ async def asyncio_detailed(
      Get complete task history including status changes and logs
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierHistoryIdType | Unset):  Default:
-            GetApiTasksIdentifierHistoryIdType.SESSION_ID.
+        task_id (str):
         limit (int | Unset):  Default: 100.
         offset (int | Unset):  Default: 0.
 
@@ -189,8 +169,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        identifier=identifier,
-        id_type=id_type,
+        task_id=task_id,
         limit=limit,
         offset=offset,
     )
@@ -201,10 +180,9 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    identifier: str,
     *,
     client: AuthenticatedClient | Client,
-    id_type: GetApiTasksIdentifierHistoryIdType | Unset = GetApiTasksIdentifierHistoryIdType.SESSION_ID,
+    task_id: str,
     limit: int | Unset = 100,
     offset: int | Unset = 0,
 ) -> HttpErrorResponse | HttpTaskHistoryResponse | None:
@@ -213,9 +191,7 @@ async def asyncio(
      Get complete task history including status changes and logs
 
     Args:
-        identifier (str):
-        id_type (GetApiTasksIdentifierHistoryIdType | Unset):  Default:
-            GetApiTasksIdentifierHistoryIdType.SESSION_ID.
+        task_id (str):
         limit (int | Unset):  Default: 100.
         offset (int | Unset):  Default: 0.
 
@@ -229,9 +205,8 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
-            identifier=identifier,
             client=client,
-            id_type=id_type,
+            task_id=task_id,
             limit=limit,
             offset=offset,
         )

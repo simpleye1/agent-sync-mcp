@@ -185,24 +185,19 @@ paths:
       summary: Health check
       tags:
       - health
-  /api/tasks/{identifier}:
+  /api/tasks:
     get:
-      description: Get the current status of a task by identifier
+      description: Get task information by task_id or session_id
       parameters:
-      - description: Task identifier (session_id or task_id)
-        in: path
-        name: identifier
-        required: true
+      - description: Task ID
+        in: query
+        name: task_id
         schema:
           type: string
-      - description: Type of identifier
+      - description: Session ID
         in: query
-        name: id_type
+        name: session_id
         schema:
-          default: session_id
-          enum:
-          - session_id
-          - task_id
           type: string
       responses:
         "200":
@@ -223,27 +218,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/http.ErrorResponse'
           description: Not Found
-      summary: Get task status
+      summary: Get task
       tags:
       - tasks
-  /api/tasks/{identifier}/history:
-    get:
-      description: Get complete task history including status changes and logs
+    post:
+      description: Update task information and create history record
       parameters:
-      - description: Task identifier (session_id or task_id)
-        in: path
-        name: identifier
+      - description: Task ID
+        in: query
+        name: task_id
         required: true
         schema:
           type: string
-      - description: Type of identifier
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/http.TaskUpdateRequest'
+        description: Task update request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/http.TaskUpdateResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/http.ErrorResponse'
+          description: Bad Request
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/http.ErrorResponse'
+          description: Not Found
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/http.ErrorResponse'
+          description: Internal Server Error
+      summary: Update task
+      tags:
+      - tasks
+  /api/tasks/history:
+    get:
+      description: Get complete task history including status changes and logs
+      parameters:
+      - description: Task ID
         in: query
-        name: id_type
+        name: task_id
+        required: true
         schema:
-          default: session_id
-          enum:
-          - session_id
-          - task_id
           type: string
       - description: Maximum number of history entries
         in: query
@@ -286,59 +316,5 @@ paths:
                 $ref: '#/components/schemas/http.ErrorResponse'
           description: Internal Server Error
       summary: Get task history
-      tags:
-      - tasks
-  /api/tasks/{identifier}/status:
-    put:
-      description: Update task status and create history record
-      parameters:
-      - description: Task identifier (session_id or task_id)
-        in: path
-        name: identifier
-        required: true
-        schema:
-          type: string
-      - description: Type of identifier
-        in: query
-        name: id_type
-        schema:
-          default: session_id
-          enum:
-          - session_id
-          - task_id
-          type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/http.TaskUpdateRequest'
-        description: Task update request
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/http.TaskUpdateResponse'
-          description: OK
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/http.ErrorResponse'
-          description: Bad Request
-        "404":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/http.ErrorResponse'
-          description: Not Found
-        "500":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/http.ErrorResponse'
-          description: Internal Server Error
-      summary: Update task status
       tags:
       - tasks
