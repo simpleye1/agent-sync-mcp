@@ -35,22 +35,59 @@ class HttpTaskManagerClient(TaskManagerClientBase):
                 )
                 
                 if response.status_code >= 400:
-                    error_data = response.json()
-                    return {
-                        "success": False,
-                        "error": error_data.get("error", "Unknown error"),
-                        "error_code": error_data.get("error_code"),
-                        "status_code": response.status_code
-                    }
+                    # 特殊处理常见的 HTTP 错误状态码
+                    if response.status_code == 404:
+                        return {
+                            "success": False,
+                            "error": f"API endpoint not found: {method} {path}. The backend service may not have implemented this API yet.",
+                            "status_code": 404,
+                            "hint": "Please check if the Task Manager backend service has this endpoint implemented."
+                        }
+                    elif response.status_code == 500:
+                        return {
+                            "success": False,
+                            "error": f"Backend server error (500). The Task Manager service encountered an internal error.",
+                            "status_code": 500,
+                            "hint": "Please check the Task Manager service logs for details."
+                        }
+                    
+                    # 尝试解析 JSON 错误响应
+                    try:
+                        error_data = response.json()
+                        return {
+                            "success": False,
+                            "error": error_data.get("error", f"HTTP {response.status_code} error"),
+                            "error_code": error_data.get("error_code"),
+                            "status_code": response.status_code
+                        }
+                    except Exception:
+                        # 如果无法解析 JSON，返回通用错误信息
+                        return {
+                            "success": False,
+                            "error": f"HTTP {response.status_code} error: {response.text[:200]}",
+                            "status_code": response.status_code
+                        }
                 
                 return response.json()
                 
         except httpx.TimeoutException:
-            return {"success": False, "error": "Request timeout"}
+            return {
+                "success": False, 
+                "error": f"Request timeout after {self.timeout} seconds",
+                "hint": "The Task Manager service may be slow or unresponsive. Try increasing TASK_MANAGER_TIMEOUT."
+            }
         except httpx.ConnectError:
-            return {"success": False, "error": f"Connection failed to {self.base_url}"}
+            return {
+                "success": False, 
+                "error": f"Cannot connect to Task Manager service at {self.base_url}",
+                "hint": "Please verify that the Task Manager service is running and the host/port are correct."
+            }
         except Exception as e:
-            return {"success": False, "error": f"Request failed: {str(e)}"}
+            return {
+                "success": False, 
+                "error": f"Request failed: {str(e)}",
+                "hint": "An unexpected error occurred. Please check the error message above."
+            }
     
     def patch_execution(
         self, 
