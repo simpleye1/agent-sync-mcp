@@ -16,7 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
 COPY src/ ./src/
-COPY agent_sync_mcp.py .
+COPY task_manager_mcp.py .
 
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash mcp
@@ -33,4 +33,4 @@ ENV USE_MOCK_CLIENT=false
 EXPOSE 3000
 
 # Run the MCP server
-CMD ["python", "agent_sync_mcp.py"]
+CMD ["python", "task_manager_mcp.py"]

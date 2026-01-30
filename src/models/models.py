@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Data models for Agent Sync MCP Server
+Data models for Task Manager MCP Server
 """
 
 from dataclasses import dataclass

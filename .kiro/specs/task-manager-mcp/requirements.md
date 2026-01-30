@@ -2,26 +2,26 @@
 
 ## 简介
 
-Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服务，用于向 Task Manager 服务汇报 Agent 执行进度。该服务提供了一组工具，允许 Agent 注册会话、创建执行步骤、更新步骤状态，并检查服务健康状态。
+Nova Task Manager MCP 服务器是一个基于 MCP (Model Context Protocol) 的服务,用于向 Task Manager 服务汇报 Agent 执行进度。该服务提供了一组工具,允许 Agent 注册会话、创建执行步骤、更新步骤状态,并检查服务健康状态。
 
 ## 术语表
 
-- **MCP_Server**: 基于 fastmcp 框架实现的 MCP 服务器，提供工具供 Agent 调用
-- **Task_Manager**: 后端服务，负责管理任务和执行状态
-- **Execution**: 一次任务执行实例，包含多个步骤
-- **Step**: 执行过程中的单个步骤，具有状态和消息
+- **MCP_Server**: 基于 fastmcp 框架实现的 MCP 服务器,提供工具供 Agent 调用
+- **Task_Manager**: 后端服务,负责管理任务和执行状态
+- **Execution**: 一次任务执行实例,包含多个步骤
+- **Step**: 执行过程中的单个步骤,具有状态和消息
 - **Session_ID**: Agent 会话的唯一标识符
-- **Step_Status**: 步骤状态枚举，包括 running、completed、failed、skipped
+- **Step_Status**: 步骤状态枚举,包括 running、completed、failed、skipped
 - **Client**: 与 Task Manager 通信的客户端实现
 - **HTTP_Client**: 通过 HTTP 协议与真实 Task Manager API 通信的客户端
 - **Mock_Client**: 用于测试的模拟客户端实现
-- **NOVA_EXECUTION_ID**: 环境变量，包含当前执行的 execution_id，Agent 可从此环境变量获取
+- **NOVA_EXECUTION_ID**: 环境变量,包含当前执行的 execution_id,Agent 可从此环境变量获取
 
 ## 需求
 
 ### 需求 1：会话注册
 
-**用户故事：** 作为 Agent，我希望在开始执行时注册我的会话 ID，以便 Task Manager 能够追踪我的执行状态。
+**用户故事：** 作为 Agent,我希望在开始执行时注册我的会话 ID,以便 Task Manager 能够追踪我的执行状态。
 
 #### 验收标准
 
@@ -34,12 +34,12 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 
 ### 需求 2：步骤创建
 
-**用户故事：** 作为 Agent，我希望创建执行步骤来记录我的工作进度，以便用户能够了解执行的详细过程。
+**用户故事：** 作为 Agent,我希望创建执行步骤来记录我的工作进度,以便用户能够了解执行的详细过程。
 
 #### 验收标准
 
 1. WHEN Agent 调用 create_step 工具并提供 execution_id 和 step_name THEN MCP_Server SHALL 创建一个新步骤
-2. WHEN 步骤创建成功 THEN MCP_Server SHALL 返回包含 step_id 的响应，供后续更新使用
+2. WHEN 步骤创建成功 THEN MCP_Server SHALL 返回包含 step_id 的响应,供后续更新使用
 3. WHEN Agent 提供可选的 message 参数 THEN MCP_Server SHALL 将该消息包含在创建的步骤中
 4. WHEN Agent 提供可选的 status 参数 THEN MCP_Server SHALL 使用该状态作为步骤的初始状态
 5. WHEN Agent 未提供 status 参数 THEN MCP_Server SHALL 使用 "running" 作为默认初始状态
@@ -50,7 +50,7 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 
 ### 需求 3：步骤更新
 
-**用户故事：** 作为 Agent，我希望更新步骤的状态和消息，以便实时反映执行进度。
+**用户故事：** 作为 Agent,我希望更新步骤的状态和消息,以便实时反映执行进度。
 
 #### 验收标准
 
@@ -64,7 +64,7 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 
 ### 需求 4：健康检查
 
-**用户故事：** 作为运维人员，我希望检查服务健康状态，以便监控系统运行情况。
+**用户故事：** 作为运维人员,我希望检查服务健康状态,以便监控系统运行情况。
 
 #### 验收标准
 
@@ -74,7 +74,7 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 
 ### 需求 5：客户端策略模式
 
-**用户故事：** 作为开发者，我希望能够在真实 HTTP 客户端和 Mock 客户端之间切换，以便在不同环境下进行开发和测试。
+**用户故事：** 作为开发者,我希望能够在真实 HTTP 客户端和 Mock 客户端之间切换,以便在不同环境下进行开发和测试。
 
 #### 验收标准
 
@@ -82,13 +82,13 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 2. WHEN USE_MOCK_CLIENT 环境变量为 "true" THEN Client_Factory SHALL 返回 Mock_Client 实例
 3. WHEN USE_MOCK_CLIENT 环境变量为 "false" 或未设置 THEN Client_Factory SHALL 返回 HTTP_Client 实例
 4. THE HTTP_Client SHALL 从环境变量读取配置：TASK_MANAGER_HOST（默认 localhost）、TASK_MANAGER_PORT（默认 8080）、TASK_MANAGER_TIMEOUT（默认 30 秒）
-5. THE Mock_Client SHALL 在内存中维护 execution 和 step 数据，用于测试验证
+5. THE Mock_Client SHALL 在内存中维护 execution 和 step 数据,用于测试验证
 
 ### 需求 6：HTTP 客户端实现
 
-**用户故事：** 作为系统集成者，我希望 HTTP 客户端能够正确调用 Task Manager API，以便与后端服务通信。
+**用户故事：** 作为系统集成者,我希望 HTTP 客户端能够正确调用 Task Manager API,以便与后端服务通信。
 
-**技术说明：** 项目使用 `openapi-python-client` 从 `docs/swagger.yaml` 自动生成类型化的 API 客户端代码。当 API 定义更新时，运行 `make regenerate` 重新生成客户端。
+**技术说明：** 项目使用 `openapi-python-client` 从 `docs/swagger.yaml` 自动生成类型化的 API 客户端代码。当 API 定义更新时,运行 `make regenerate` 重新生成客户端。
 
 #### 验收标准
 
@@ -104,7 +104,7 @@ Nova Agent Sync MCP 服务器是一个基于 MCP (Model Context Protocol) 的服
 
 ### 需求 7：数据模型
 
-**用户故事：** 作为开发者，我希望有清晰的数据模型定义，以便理解和使用 API 数据结构。
+**用户故事：** 作为开发者,我希望有清晰的数据模型定义,以便理解和使用 API 数据结构。
 
 #### 验收标准
 

@@ -16,7 +16,7 @@ from src.clients import create_task_manager_client
 
 
 task_client = create_task_manager_client()
-mcp = fastmcp.FastMCP("Nova Agent Sync")
+mcp = fastmcp.FastMCP("Nova Task Manager")
 
 
 @mcp.tool()

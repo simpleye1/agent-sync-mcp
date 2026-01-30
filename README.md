@@ -1,4 +1,4 @@
-# Agent Sync MCP
+# Task Manager MCP
 
 Nova Agent 进度汇报 MCP 服务器。
 
@@ -45,5 +45,5 @@ USE_MOCK_CLIENT=false
 
 ```bash
 pip install -r requirements.txt
-python agent_sync_mcp.py
+python task_manager_mcp.py
 ```

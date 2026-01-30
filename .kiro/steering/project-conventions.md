@@ -2,7 +2,7 @@
 inclusion: always
 ---
 
-# Agent Sync MCP 项目规范
+# Task Manager MCP 项目规范
 
 ## 代码生成
 

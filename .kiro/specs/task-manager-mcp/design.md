@@ -2,9 +2,9 @@
 
 ## 概述
 
-Nova Agent Sync MCP 服务器采用分层架构设计，将 MCP 工具层、客户端抽象层和具体实现层分离。通过策略模式实现客户端的可替换性，支持在生产环境使用 HTTP 客户端，在测试环境使用 Mock 客户端。
+Nova Task Manager MCP 服务器采用分层架构设计,将 MCP 工具层、客户端抽象层和具体实现层分离。通过策略模式实现客户端的可替换性,支持在生产环境使用 HTTP 客户端,在测试环境使用 Mock 客户端。
 
-**重要说明：** 项目使用 `openapi-python-client` 从 `docs/swagger.yaml` 自动生成类型化的 API 客户端代码到 `src/clients/generated/` 目录。当 API 定义更新时，运行 `make regenerate` 重新生成客户端代码。
+**重要说明：** 项目使用 `openapi-python-client` 从 `docs/swagger.yaml` 自动生成类型化的 API 客户端代码到 `src/clients/generated/` 目录。当 API 定义更新时,运行 `make regenerate` 重新生成客户端代码。
 
 ## 架构
 
@@ -53,10 +53,10 @@ graph TB
 
 ### 层次说明
 
-1. **MCP Layer**: 基于 fastmcp 框架的工具定义层，负责接收 Agent 调用并返回结果
-2. **Client Layer**: 客户端抽象层，通过策略模式实现不同的后端通信方式
+1. **MCP Layer**: 基于 fastmcp 框架的工具定义层,负责接收 Agent 调用并返回结果
+2. **Client Layer**: 客户端抽象层,通过策略模式实现不同的后端通信方式
    - **Generated API Client**: 从 swagger.yaml 自动生成的类型化客户端（位于 `src/clients/generated/`）
-   - **HttpTaskManagerClient**: 手写的 HTTP 客户端包装器，可选择性使用生成的客户端
+   - **HttpTaskManagerClient**: 手写的 HTTP 客户端包装器,可选择性使用生成的客户端
    - **MockTaskManagerClient**: 用于测试的内存模拟客户端
 3. **External**: 外部 Task Manager 服务和 API 定义
 
@@ -133,8 +133,8 @@ response = post_api_executions_execution_id_steps.sync(
 
 ### 层次说明（已更新）
 
-1. **MCP Layer**: 基于 fastmcp 框架的工具定义层，负责接收 Agent 调用并返回结果
-2. **Client Layer**: 客户端抽象层，通过策略模式实现不同的后端通信方式
+1. **MCP Layer**: 基于 fastmcp 框架的工具定义层,负责接收 Agent 调用并返回结果
+2. **Client Layer**: 客户端抽象层,通过策略模式实现不同的后端通信方式
 3. **External**: 外部 Task Manager 服务
 
 ## 组件和接口
@@ -158,7 +158,7 @@ def update_execution_session(execution_id: str, session_id: str) -> Dict[str, An
 @mcp.tool()
 def create_step(execution_id: str, step_name: str, message: Optional[str] = None, status: Optional[str] = None) -> Dict[str, Any]:
     """
-    创建新步骤，返回 step_id。默认初始状态为 running。
+    创建新步骤,返回 step_id。默认初始状态为 running。
     
     Args:
         execution_id: 执行 ID（可从环境变量 NOVA_EXECUTION_ID 获取）
@@ -289,43 +289,43 @@ class StepPatch:
 
 ### Property 1: 响应格式一致性
 
-*For any* MCP 工具调用，当操作成功时，响应 SHALL 包含 `success=True` 和 `data` 字段；当操作失败时，响应 SHALL 包含 `success=False` 和 `error` 字段。
+*For any* MCP 工具调用,当操作成功时,响应 SHALL 包含 `success=True` 和 `data` 字段；当操作失败时,响应 SHALL 包含 `success=False` 和 `error` 字段。
 
 **Validates: Requirements 1.2, 1.3, 2.2, 2.4, 3.6**
 
 ### Property 2: 状态值验证
 
-*For any* 传入 update_step 工具的 status 参数，如果该值不在 {running, completed, failed, skipped} 集合中，则工具 SHALL 返回包含 `success=False` 的错误响应。
+*For any* 传入 update_step 工具的 status 参数,如果该值不在 {running, completed, failed, skipped} 集合中,则工具 SHALL 返回包含 `success=False` 的错误响应。
 
 **Validates: Requirements 3.2, 3.3**
 
 ### Property 3: Mock 客户端状态一致性
 
-*For any* 通过 Mock_Client 创建的步骤，后续对该步骤的更新操作 SHALL 反映在步骤状态中；对于不存在的步骤 ID，更新操作 SHALL 返回错误。
+*For any* 通过 Mock_Client 创建的步骤,后续对该步骤的更新操作 SHALL 反映在步骤状态中；对于不存在的步骤 ID,更新操作 SHALL 返回错误。
 
 **Validates: Requirements 5.5**
 
 ### Property 4: 工厂方法选择正确性
 
-*For any* USE_MOCK_CLIENT 环境变量值，当值为 "true"（不区分大小写）时，工厂方法 SHALL 返回 MockTaskManagerClient 实例；否则 SHALL 返回 HttpTaskManagerClient 实例。
+*For any* USE_MOCK_CLIENT 环境变量值,当值为 "true"（不区分大小写）时,工厂方法 SHALL 返回 MockTaskManagerClient 实例；否则 SHALL 返回 HttpTaskManagerClient 实例。
 
 **Validates: Requirements 5.1, 5.2, 5.3**
 
 ### Property 5: HTTP 错误响应处理
 
-*For any* HTTP 响应状态码 >= 400，HTTP_Client SHALL 返回包含 `success=False`、`error` 和 `status_code` 字段的响应。
+*For any* HTTP 响应状态码 >= 400,HTTP_Client SHALL 返回包含 `success=False`、`error` 和 `status_code` 字段的响应。
 
 **Validates: Requirements 6.7**
 
 ### Property 6: 步骤创建初始状态
 
-*For any* 通过 create_step 创建的步骤，如果未提供 status 参数，其初始状态 SHALL 为 "running"；如果提供了 status 参数，SHALL 使用提供的状态值。
+*For any* 通过 create_step 创建的步骤,如果未提供 status 参数,其初始状态 SHALL 为 "running"；如果提供了 status 参数,SHALL 使用提供的状态值。
 
 **Validates: Requirements 2.1, 2.4, 2.5**
 
 ### Property 7: 参数传递完整性
 
-*For any* 传入 MCP 工具的参数，客户端方法 SHALL 接收到相同的参数值（参数不丢失、不篡改）。
+*For any* 传入 MCP 工具的参数,客户端方法 SHALL 接收到相同的参数值（参数不丢失、不篡改）。
 
 **Validates: Requirements 1.1, 2.3, 3.1, 3.5**
 
@@ -345,9 +345,9 @@ class StepPatch:
 
 ### 异常处理策略
 
-1. **MCP 工具层**: 捕获所有异常，转换为统一的错误响应格式
-2. **HTTP 客户端层**: 捕获 httpx 异常（TimeoutException、ConnectError），转换为错误响应
-3. **Mock 客户端层**: 验证数据存在性，返回适当的错误响应
+1. **MCP 工具层**: 捕获所有异常,转换为统一的错误响应格式
+2. **HTTP 客户端层**: 捕获 httpx 异常（TimeoutException、ConnectError）,转换为错误响应
+3. **Mock 客户端层**: 验证数据存在性,返回适当的错误响应
 
 ## 测试策略
 
@@ -362,7 +362,7 @@ class StepPatch:
 
 - **测试框架**: pytest + hypothesis
 - **最小迭代次数**: 每个属性测试 100 次
-- **标签格式**: `Feature: agent-sync-mcp, Property {number}: {property_text}`
+- **标签格式**: `Feature: task-manager-mcp, Property {number}: {property_text}`
 
 ### 测试覆盖范围
 
